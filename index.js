@@ -101,25 +101,27 @@ app.delete('/api/persons/:id', (req, res) => {
 })
 
 app.post('/api/persons', (req, res) => {
-    const nameExists = persons.some(p => p.name === req.body.name)
+    //const nameExists = persons.some(p => p.name === req.body.name)
 
     if(!req.body.name || !req.body.number) {
         return res.json({
             error: 'Debe agregar nombre y numero'
         })
     }
-    if(nameExists) {
+    /*if(nameExists) {
         return res.json({
             error: 'El nombre debe ser unico'
         })
-    }
-    const person = {
+    }*/
+    const person = new Person({
         name: req.body.name,
-        number: req.body.number,
-        id: idRandom()
-    }
-    persons = persons.concat(person)
-    res.json(person)
+        number: req.body.number
+    })
+   
+    person.save()
+      .then(savedPerson => {
+        res.json(savedPerson)
+      })
 })
 
 
