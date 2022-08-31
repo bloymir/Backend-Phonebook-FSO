@@ -1,7 +1,10 @@
+require("dotenv").config();
 const express = require('express')
 const morgan = require('morgan')
 const app = express()
 const PORT = process.env.PORT ||3001
+const Person = require('./models/person')
+
 app.use(express.json())
 app.use(express.static('build'))
 app.use(morgan( function (tokens, req, res ){
@@ -15,7 +18,7 @@ app.use(morgan( function (tokens, req, res ){
     ].join(' ')
 }))
 
-let persons = [
+/*let persons = [
     {
       "name": "Arto Hellas",
       "number": "040-123456",
@@ -57,6 +60,7 @@ let persons = [
       "id": 9
     }
   ]
+  */
 
 app.get('/info', (req, res) => {
     const date = new Date()
@@ -68,13 +72,25 @@ app.get('/info', (req, res) => {
 })
 
 app.get('/api/persons', (req, res) => {
-    res.json(persons)
+    Person.find({})
+      .then(persons => {
+        res.json(persons)
+      })
 })
 
 app.get('/api/persons/:id', (req, res) => {
+  
+  Person.findById(req.params.id)
+    .then(person => {
+      res.json(person)
+    })
+    .catch(error => {
+      res.status(404).end()
+    })
+  /*
     const id = Number(req.params.id)
     const person = persons.find(p => p.id === id)
-    person ? res.json(person) : res.status(404).end()
+    person ? res.json(person) : res.status(404).end()*/
 })
 
 app.delete('/api/persons/:id', (req, res) => {
