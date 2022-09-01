@@ -71,33 +71,33 @@ app.get('/info', (req, res) => {
     )
 })
 
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (req, res, next) => {
     Person.find({})
       .then(persons => {
         res.json(persons)
       })
+      .catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (req, res) => {
+app.get('/api/persons/:id', (req, res, next) => {
   
   Person.findById(req.params.id)
     .then(person => {
-      res.json(person)
+      if(person){
+        res.json(person)
+      } else {
+        res.status(404).end()
+      }
     })
-    .catch(error => {
-      res.status(404).end()
-    })
-  /*
-    const id = Number(req.params.id)
-    const person = persons.find(p => p.id === id)
-    person ? res.json(person) : res.status(404).end()*/
+    .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    persons = persons.filter(p => p.id !== id)
-    
-    res.status(204).end()
+app.delete('/api/persons/:id', (req, res, next) => {
+    Person.findByIdAndDelete(req.params.id)
+      .then(result => {
+        res.status(204).end()
+      })
+      .catch(error => next(error))
 })
 
 app.post('/api/persons', (req, res) => {
@@ -132,7 +132,17 @@ const idRandom = () => {
 const unknownEndPoint = (req, res) => {
     res.status(404).send({error: 'El endpoint no existe'})
 }
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.message)
+
+  if(error.name === 'CastError'){
+    return res.status(400).send({error: 'Malformatted id'})
+  }
+  next(error)
+}
 app.use(unknownEndPoint)
+app.use(errorHandler)
 app.listen(PORT, () => {
     console.log(`Server running on port http://localhost:${PORT}`)
 })
