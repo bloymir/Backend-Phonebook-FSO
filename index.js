@@ -128,16 +128,14 @@ app.put('/api/persons/:id', (req, res, next) => {
     number
   }
 
-  Person.findByIdAndUpdate(req.params.id, person, {new: true})
+  Person.findByIdAndUpdate(req.params.id, person, {new: true, runValidators: true})
     .then(updatedPerson => {
       res.json(updatedPerson)
     })
     .catch(error => next(error))
 })
 
-const idRandom = () => {
-    return Math.floor(Math.random() * 1000)
-}
+
 const unknownEndPoint = (req, res) => {
     res.status(404).send({error: 'El endpoint no existe'})
 }
@@ -148,7 +146,7 @@ const errorHandler = (error, req, res, next) => {
   if(error.name === 'CastError'){
     return res.status(400).send({error: 'Malformatted id'})
   } else if (error.name === 'ValidationError'){
-    return res.status(406).send({error: 'Name is used'})
+    return res.status(406).send({error: error.message})
   }
   next(error)
 }
