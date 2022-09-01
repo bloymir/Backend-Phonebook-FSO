@@ -63,12 +63,16 @@ app.use(morgan( function (tokens, req, res ){
   */
 
 app.get('/info', (req, res) => {
-    const date = new Date()
-    console.log(date)
-    res.send(`
-    Phonebook has info for ${persons.length} people
-    ${date.toString()}`
-    )
+
+    Person.estimatedDocumentCount((err, numOfDocument) => {
+      if(err) throw(err)
+      const date = new Date()
+      res.send(`
+      Phonebook has info for ${numOfDocument} people
+      ${date.toString()}`
+      )
+    })
+    
 })
 
 app.get('/api/persons', (req, res, next) => {
@@ -100,31 +104,36 @@ app.delete('/api/persons/:id', (req, res, next) => {
       .catch(error => next(error))
 })
 
-app.post('/api/persons', (req, res) => {
-    //const nameExists = persons.some(p => p.name === req.body.name)
-
+app.post('/api/persons', (req, res, next) => {
     if(!req.body.name || !req.body.number) {
         return res.json({
             error: 'Debe agregar nombre y numero'
         })
     }
-    /*if(nameExists) {
-        return res.json({
-            error: 'El nombre debe ser unico'
-        })
-    }*/
     const person = new Person({
         name: req.body.name,
         number: req.body.number
     })
-   
     person.save()
       .then(savedPerson => {
         res.json(savedPerson)
       })
+      .catch(error => next(error))
 })
 
+app.put('/api/persons/:id', (req, res, next) => {
+  const {name, number} = req.body
+  const person = {
+    name,
+    number
+  }
 
+  Person.findByIdAndUpdate(req.params.id, person, {new: true})
+    .then(updatedPerson => {
+      res.json(updatedPerson)
+    })
+    .catch(error => next(error))
+})
 
 const idRandom = () => {
     return Math.floor(Math.random() * 1000)
